@@ -35,22 +35,17 @@ include '../partials/cdn.php';
     <?php
     include '../partials/navbar.php';
     ?>
+
     <div class="d-flex">
 
         <?php
         include '../partials/sidebar.php';
         ?>
 
-        <div class="flex-grow-1 p-4">
-            <div class="d-flex justify-content-end mb-4">
-                <a href="create.php"><button type="button" class="btn btn-dark">Create some news</button></a>
-            </div>
-
-            <div class="container">
-                <?php
-                include '../partials/table.php';
-                ?>
-            </div>
+        <div class="container">
+            <?php
+            include '../partials/table.php';
+            ?>
         </div>
     </div>
 </body>
