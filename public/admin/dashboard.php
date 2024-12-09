@@ -21,10 +21,10 @@ include '../partials/cdn.php';
         include '../partials/sidebar.php';
         ?>
 
-        <div class="flex-grow-1 p-4">
+        <div class="p-4">
             <header class="mb-4">
                 <h1>Welcome Admin!</h1>
-                <p class="text-muted">Ready to add, edit, or publish some news?</p>
+                <p class="text-white">Ready to add, edit, or publish some news?</p>
             </header>
 
             <div class="row mb-4">
@@ -69,7 +69,7 @@ include '../partials/cdn.php';
                     </div>
                 </div>
                 <div class="col-3">
-                    <a href="#" target="_blank" class="text-decoration-none">
+                    <a href="create.php" target="_blank" class="text-decoration-none">
                         <div class="card text-center border-0 shadow" style="max-width: 15rem; height: 8rem;">
                             <div class="card-body d-flex flex-column justify-content-center align-items-center h-100">
                                 <div class="card-text fw-bold text-secondary fs-6">Add some news?</div>

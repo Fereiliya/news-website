@@ -42,10 +42,16 @@ include '../partials/cdn.php';
         include '../partials/sidebar.php';
         ?>
 
-        <div class="container">
+        <div class="">
             <?php
             include '../partials/table.php';
             ?>
         </div>
     </div>
+    
+    <div class="py-4">
+            <div class="d-flex justify-content-end">
+                <a href="create.php"><button type="button" class="btn btn-dark fs-4 rounded-4 px-5 py-2">Create some news</button></a>
+            </div>
+        </div>
 </body>

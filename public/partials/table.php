@@ -24,8 +24,8 @@
     .container {
         width: 100%;
         max-width: 1200px;
-        margin: 0 auto;
-        padding: 5px;
+        margin: 0;
+        padding: 0px;
     }
 
     .news-container {
@@ -149,7 +149,7 @@
 
     @media (max-width: 1200px) {
         .container {
-            width: 75%;
+            width: 80%;
             padding: 10px;
         }
 
@@ -223,16 +223,39 @@
         }
     }
 </style>
+<?php
+require_once '../../app/db.php';
+
+if (!isset($_SESSION['admin'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$db = connectMongoDB();
+$collection = $db->NewsOne;
+if (isset($_GET['delete'])) {
+    $newsId = $_GET['delete'];
+
+    if (preg_match('/^[a-f0-9]{24}$/', $newsId)) {
+        $collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($newsId)]);
+        header("Location: list-news.php");
+        exit;
+    } else {
+        echo "Invalid ObjectId format.";
+    }
+}
+
+$newsList = $collection->find([], [
+    'limit' => 5
+]);
+
+$newsArray = iterator_to_array($newsList);
+?>
 </head>
 
 <body>
-    <div class="py-4">
-        <div class="d-flex justify-content-end">
-            <a href="create.php"><button type="button" class="btn btn-dark fs-4 rounded-4 px-5 py-2">Create some news</button></a>
-        </div>
-    </div>
 
-    <div class="container">
+    <div class="">
         <div class="news-container">
             <div class="news-header">
                 <div class="d-flex flex-row justify-content-between w-100">
@@ -240,7 +263,7 @@
                         <h2 class="mb-0 fw-bold fs-2">News Management</h2>
                     </div>
                     <div>
-                        <input type="text" class="form-control search-bar w-100" placeholder="Search news...">
+                        <input type="text" class="form-control search-bar" placeholder="Search news...">
                     </div>
                 </div>
             </div>
@@ -263,7 +286,7 @@
                                     <i class="bi bi-pencil"></i> Edit
                                 </a>
                                 <a href="?delete=<?= $news['_id'] ?>" class="btn btn-sm btn-action btn-delete"
-                                    onclick="return confirm('Are you sure?')">
+                                     data-bs-toggle="modal" data-bs-target="#hapus">
                                     <i class="bi bi-trash"></i> Delete
                                 </a>
                             </div>
@@ -291,3 +314,19 @@
             </nav>
         </div>
     </div>
+
+    <div class="modal fade" id="hapus" tabindex="-1" aria-hidden="true">
+     <div class="modal-dialog">
+         <div class="modal-content">
+             <div class="modal-body">
+                 <div class="text-center text-dark">Are you sure you want to Delete this News?</div>
+                 <div class="container">
+                     <div class="d-flex align-items-center justify-content-center mt-3">
+                         <button type="button" class="btn btn-danger w-25 me-2 border-0" style="background-color: dodgerblue">Yes</button>
+                         <button type="button" class="btn btn-secondary w-25 px-3 border-0" style="background-color: var(--secondary-bg);" data-bs-dismiss="modal">No</button>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+ </div>
