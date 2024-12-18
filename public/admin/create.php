@@ -10,38 +10,41 @@ if (!isset($_SESSION['admin'])) {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $db = connectMongoDB();
-    $collection = $db->NewsOne;
+if (isset($_POST['submit'])) {
 
-    // Get form data
-    $title = $_POST['title'];
-    $content = $_POST['content'];
-    $summary = $_POST['summary'];
-    $category = $_POST['category'];
-    $author = $_POST['author'];
-    $image = $_POST['image'];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $db = connectMongoDB();
+        $collection = $db->NewsOne;
 
-    $document = [
-        'title' => $title,
-        'content' => $content,
-        'summary' => $summary,
-        'category' => $category,
-        'author' => $author,
-        'image' => $image,
-        'created_at' => new MongoDB\BSON\UTCDateTime(),
-        'updated_at' => new MongoDB\BSON\UTCDateTime()
-    ];
+        // Get form data
+        $title = $_POST['title'];
+        $content = $_POST['content'];
+        $summary = $_POST['summary'];
+        $category = $_POST['category'];
+        $author = $_POST['author'];
+        $image = $_POST['image'];
 
-    // Insert the document into the collection
-    $result = $collection->insertOne($document);
+        $document = [
+            'title' => $title,
+            'content' => $content,
+            'summary' => $summary,
+            'category' => $category,
+            'author' => $author,
+            'image' => $image,
+            'created_at' => new MongoDB\BSON\UTCDateTime(),
+            'updated_at' => new MongoDB\BSON\UTCDateTime()
+        ];
 
-    // Check if the insert was successful
-    if ($result->getInsertedCount() > 0) {
-        header("Location: list-news.php"); // Redirect to the news list page
-        exit;
-    } else {
-        $error = "Failed to add news.";
+        // Insert the document into the collection
+        $result = $collection->insertOne($document);
+
+        // Check if the insert was successful
+        if ($result->getInsertedCount() > 0) {
+            header("Location: list-news.php"); // Redirect to the news list page
+            exit;
+        } else {
+            $error = "Failed to add news.";
+        }
     }
 }
 ?>
@@ -65,13 +68,17 @@ include '../partials/cdn.php';
             <p class="text-muted">Let's share the latest update, Admin!</p>
 
             <div class="container">
-                <?php
-                include '../partials/form.php';
-                ?>
-                <div class="d-flex justify-content-end mb-4">
-                    <button type="button" class="btn btn-dark">Create</button>
-                </div>
+                <form  action="" method="post">
+
+                    <?php
+                    include '../partials/form.php';
+                    ?>
+                    <div class="d-flex justify-content-end mb-4">
+                        <button type="submit" class="btn btn-dark" name="submit">Create</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
     </div>
 </body>

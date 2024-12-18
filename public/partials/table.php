@@ -15,7 +15,7 @@
     }
 
     body {
-        background-color: var(--primary-bg);
+        background-color: var(--text-primary);
         color: var(--text-primary);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         line-height: 1.6;
@@ -24,12 +24,13 @@
     .container {
         width: 100%;
         max-width: 1200px;
-        margin: 0;
-        padding: 0px;
+        margin: 0 auto;
+        padding: 5px;
     }
 
     .news-container {
-        background-color: var(--secondary-bg);
+        background-color: var(--text-primary);
+        color: #121212;
         border-radius: 12px;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         padding: 20px;
@@ -53,7 +54,7 @@
         width: 100%;
         max-width: 200px;
         padding: 8px;
-        background-color: var(--primary-bg);
+        background-color: var(--text-primary);
         border: 1px solid var(--border-color);
         color: var(--text-primary);
         border-radius: 4px;
@@ -103,7 +104,7 @@
     .btn {
         background-color: transparent;
         border: 1px solid var(--border-color);
-        color: var(--text-primary);
+        color: var(--primary-bg);
         padding: 5px 10px;
         margin-left: 5px;
         border-radius: 4px;
@@ -113,7 +114,7 @@
     }
 
     .btn:hover {
-        background-color: var(--hover-color);
+        background-color: var(--text-secondary);
     }
 
     .btn-delete {
@@ -149,7 +150,7 @@
 
     @media (max-width: 1200px) {
         .container {
-            width: 80%;
+            width: 75%;
             padding: 10px;
         }
 
@@ -238,24 +239,27 @@ if (isset($_GET['delete'])) {
 
     if (preg_match('/^[a-f0-9]{24}$/', $newsId)) {
         $collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($newsId)]);
-        header("Location: list-news.php");
+        
         exit;
     } else {
         echo "Invalid ObjectId format.";
     }
 }
 
-$newsList = $collection->find([], [
-    'limit' => 5
-]);
+$newsList = $collection->find();
 
 $newsArray = iterator_to_array($newsList);
 ?>
 </head>
 
 <body>
+    <div class="py-4">
+        <div class="d-flex justify-content-end">
+            <a href="create.php"><button type="button" class="btn btn-dark btn-lg fs-5 text-dark">Create some news</button></a>
+        </div>
+    </div>
 
-    <div class="">
+    <div class="container">
         <div class="news-container">
             <div class="news-header">
                 <div class="d-flex flex-row justify-content-between w-100">
@@ -263,7 +267,7 @@ $newsArray = iterator_to_array($newsList);
                         <h2 class="mb-0 fw-bold fs-2">News Management</h2>
                     </div>
                     <div>
-                        <input type="text" class="form-control search-bar" placeholder="Search news...">
+                        <input type="text" class="form-control search-bar w-100" placeholder="Search news...">
                     </div>
                 </div>
             </div>
@@ -286,7 +290,7 @@ $newsArray = iterator_to_array($newsList);
                                     <i class="bi bi-pencil"></i> Edit
                                 </a>
                                 <a href="?delete=<?= $news['_id'] ?>" class="btn btn-sm btn-action btn-delete"
-                                     data-bs-toggle="modal" data-bs-target="#hapus">
+                                    onclick="return confirm('Are you sure?')">
                                     <i class="bi bi-trash"></i> Delete
                                 </a>
                             </div>
@@ -315,18 +319,4 @@ $newsArray = iterator_to_array($newsList);
         </div>
     </div>
 
-    <div class="modal fade" id="hapus" tabindex="-1" aria-hidden="true">
-     <div class="modal-dialog">
-         <div class="modal-content">
-             <div class="modal-body">
-                 <div class="text-center text-dark">Are you sure you want to Delete this News?</div>
-                 <div class="container">
-                     <div class="d-flex align-items-center justify-content-center mt-3">
-                         <button type="button" class="btn btn-danger w-25 me-2 border-0" style="background-color: dodgerblue">Yes</button>
-                         <button type="button" class="btn btn-secondary w-25 px-3 border-0" style="background-color: var(--secondary-bg);" data-bs-dismiss="modal">No</button>
-                     </div>
-                 </div>
-             </div>
-         </div>
-     </div>
- </div>
+    

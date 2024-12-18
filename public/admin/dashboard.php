@@ -21,6 +21,7 @@ include '../partials/cdn.php';
         include '../partials/sidebar.php';
         ?>
 
+<div class="container">
         <div class="p-4">
             <header class="mb-4">
                 <h1>Welcome Admin!</h1>
@@ -79,10 +80,8 @@ include '../partials/cdn.php';
                     </a>
                 </div>
             </div>
-            <div class="container">
-                <?php
-                include '../partials/table.php';
-                ?>
+
+
             </div>
         </div>
     </div>
