@@ -127,25 +127,50 @@
         color: var(--text-primary);
     }
 
+    .search-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .search-form {
+        display: flex;
+        gap: 10px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th,
+    .table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
     .pagination {
         display: flex;
         justify-content: center;
-        margin-top: 15px;
+        margin-top: 20px;
     }
 
-    .pagination-btn {
-        background-color: var(--secondary-bg);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        padding: 5px 10px;
-        margin: 0 5px;
+    .pagination a {
+        color: black;
+        float: left;
+        padding: 8px 16px;
         text-decoration: none;
-        border-radius: 4px;
-        font-size: 0.85rem;
+        transition: background-color .3s;
+        border: 1px solid #ddd;
+        margin: 0 4px;
     }
 
-    .pagination-btn:hover {
-        background-color: var(--hover-color);
+    .pagination a.active {
+        background-color: #4CAF50;
+        color: white;
+        border: 1px solid #4CAF50;
     }
 
     @media (max-width: 1200px) {
@@ -232,24 +257,54 @@ if (!isset($_SESSION['admin'])) {
     exit;
 }
 
+
+
 $db = connectMongoDB();
-$collection = $db->NewsOne;
+$newsCollection = $db->NewsOne;
+$newsCategory = $db->Category;
+
 if (isset($_GET['delete'])) {
     $newsId = $_GET['delete'];
 
     if (preg_match('/^[a-f0-9]{24}$/', $newsId)) {
         $collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($newsId)]);
-        
+
         exit;
     } else {
         echo "Invalid ObjectId format.";
     }
 }
 
-$newsList = $collection->find();
+$searchQuery = '';
+$filter = [];
+
+if (isset($_GET['search']) && !empty($_GET['search'])) {
+    $searchQuery = trim($_GET['search']);
+
+    $filter = [
+        '$or' => [
+            ['title' => new MongoDB\BSON\Regex($searchQuery, 'i')],
+            ['content' => new MongoDB\BSON\Regex($searchQuery, 'i')],
+            ['author' => new MongoDB\BSON\Regex($searchQuery, 'i')],
+            ['category' => new MongoDB\BSON\Regex($searchQuery, 'i')]
+        ]
+    ];
+}
+
+$newsList = $newsCollection->find($filter);
 
 $newsArray = iterator_to_array($newsList);
+
+$itemsPerPage = 5;
+$totalItems = count($newsArray);
+$totalPages = ceil($totalItems / $itemsPerPage);
+
+$currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$offset = ($currentPage - 1) * $itemsPerPage;
+
+$paginatedNews = array_slice($newsArray, $offset, $itemsPerPage);
 ?>
+
 </head>
 
 <body>
@@ -260,63 +315,83 @@ $newsArray = iterator_to_array($newsList);
     </div>
 
     <div class="container">
-        <div class="news-container">
-            <div class="news-header">
-                <div class="d-flex flex-row justify-content-between w-100">
-                    <div>
-                        <h2 class="mb-0 fw-bold fs-2">News Management</h2>
-                    </div>
-                    <div>
-                        <input type="text" class="form-control search-bar w-100" placeholder="Search news...">
-                    </div>
-                </div>
-            </div>
-
-            <div class="news-list">
-                <?php foreach ($newsArray as $news): ?>
-                    <div class="news-item">
-                        <div class="news-item-content">
-                            <h5 class="news-title"><?= htmlspecialchars($news['title']) ?></h5>
-                            <div class="news-meta">
-                                <span>By <?= htmlspecialchars($news['author']) ?></span>
-                                <span class="mx-2">|</span>
-                                <span><?= date('F d, Y', $news['created_at']->toDateTime()->getTimestamp()) ?></span>
-                            </div>
-                            <p class="text-truncate"><?= htmlspecialchars($news['content']) ?></p>
-                        </div>
-                        <div class="news-actions ms-3">
-                            <div class="btn-group">
-                                <a href="edit.php?id=<?= $news['_id'] ?>" class="btn btn-sm btn-action">
-                                    <i class="bi bi-pencil"></i> Edit
-                                </a>
-                                <a href="?delete=<?= $news['_id'] ?>" class="btn btn-sm btn-action btn-delete"
-                                    onclick="return confirm('Are you sure?')">
-                                    <i class="bi bi-trash"></i> Delete
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-
-            <nav aria-label="News navigation">
-                <ul class="pagination">
-                    <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+        <div class="search-container">
+            <h2>News Management</h2>
+            <form method="GET" class="search-form">
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search news..."
+                    class="form-control"
+                    value="<?= htmlspecialchars($searchQuery) ?>">
+                <button type="submit" class="btn btn-primary">Search</button>
+                <?php if (!empty($searchQuery)): ?>
+                    <a href="list-news.php" class="btn d-flex align-items-center btn-secondary">Clear</a>
+                <?php endif; ?>
+            </form>
         </div>
-    </div>
 
-    
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Category</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($paginatedNews)): ?>
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            <?= empty($searchQuery) ? 'No news found.' : "No results found for '{$searchQuery}'." ?>
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($paginatedNews as $index => $news): ?>
+                        <tr>
+                            <td><?= $offset + $index + 1 ?></td>
+                            <td><?= htmlspecialchars($news['title']) ?></td>
+                            <td><?= htmlspecialchars($news['author']) ?></td>
+                            <td><?= htmlspecialchars($news['category'] ?? 'N/A') ?></td>
+                            <td>
+                                <?= date(
+                                    'F d, Y',
+                                    $news['created_at'] instanceof MongoDB\BSON\UTCDateTime
+                                        ? $news['created_at']->toDateTime()->getTimestamp()
+                                        : time()
+                                ) ?>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="edit.php?id=<?= $news['_id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+                                    <a
+                                        href="?delete=<?= $news['_id'] ?>"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Are you sure you want to delete this news?');">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <?php if ($totalPages > 1): ?>
+            <div class="pagination">
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a
+                        href="?page=<?= $i ?><?= !empty($searchQuery) ? "&search=" . urlencode($searchQuery) : '' ?>"
+                        class="<?= $i == $currentPage ? 'active' : '' ?>">
+                        <?= $i ?>
+                    </a>
+                <?php endfor; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</body>

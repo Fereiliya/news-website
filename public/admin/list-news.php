@@ -21,7 +21,24 @@ if (isset($_GET['delete'])) {
     }
 }
 
-$newsList = $collection->find();
+$searchQuery = '';
+// Cek apakah ada input pencarian
+if (isset($_GET['search'])) {
+    $searchQuery = trim($_GET['search']);
+}
+
+$filter = [];
+if ($searchQuery) {
+    $filter = [
+        '$or' => [
+            ['title' => new MongoDB\BSON\Regex($searchQuery, 'i')],
+            ['content' => new MongoDB\BSON\Regex($searchQuery, 'i')],
+            ['author' => new MongoDB\BSON\Regex($searchQuery, 'i')]
+        ]
+    ];
+}
+
+$newsList = $collection->find($filter);
 
 $newsArray = iterator_to_array($newsList);
 ?>
@@ -47,5 +64,6 @@ include '../partials/cdn.php';
             include '../partials/table.php';
             ?>
         </div>
+        
     </div>
 </body>
