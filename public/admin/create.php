@@ -9,41 +9,57 @@ if (!isset($_SESSION['admin'])) {
     exit;
 }
 
+$db = connectMongoDB();
+$collection = $db->NewsOne;
+$categoryCollection = $db->Category;
+
+try {
+    $categories = $categoryCollection->find(
+        [], 
+        ['sort' => ['name' => 1]] // Urutkan berdasarkan nama kategori
+    );
+    $categoriesArray = iterator_to_array($categories);
+} catch (Exception $e) {
+    $categoriesArray = [];
+    // Log error atau tampilkan pesan error
+}
 // Handle form submission
 if (isset($_POST['submit'])) {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $db = connectMongoDB();
-        $collection = $db->NewsOne;
-
-        // Get form data
-        $title = $_POST['title'];
-        $content = $_POST['content'];
-        $summary = $_POST['summary'];
-        $category = $_POST['category'];
-        $author = $_POST['author'];
-        $image = $_POST['image'];
-
-        $document = [
-            'title' => $title,
-            'content' => $content,
-            'summary' => $summary,
-            'category' => $category,
-            'author' => $author,
-            'image' => $image,
-            'created_at' => new MongoDB\BSON\UTCDateTime(),
-            'updated_at' => new MongoDB\BSON\UTCDateTime()
-        ];
-
-        // Insert the document into the collection
-        $result = $collection->insertOne($document);
-
-        // Check if the insert was successful
-        if ($result->getInsertedCount() > 0) {
-            header("Location: list-news.php"); // Redirect to the news list page
+        try {
+            // Validasi input
+            $title = trim($_POST['title']);
+            $content = trim($_POST['content']);
+            $author = trim($_POST['author']);
+            $categoryId = $_POST['category']; // ID kategori yang dipilih
+    
+            // Validasi input
+            if (empty($title) || empty($content) || empty($author) || empty($categoryId)) {
+                throw new Exception("Semua field harus diisi");
+            }
+    
+            // Siapkan data untuk disimpan
+            $newsData = [
+                'title' => $title,
+                'content' => $content,
+                'author' => $author,
+                'category' => new MongoDB\BSON\ObjectId($categoryId), // Konversi ke ObjectId
+                'created_at' => new MongoDB\BSON\UTCDateTime(),
+                'updated_at' => new MongoDB\BSON\UTCDateTime()
+            ];
+    
+            // Simpan berita
+            $result = $newsCollection->insertOne($newsData);
+    
+            // Redirect dengan pesan sukses
+            $_SESSION['message'] = "Berita berhasil dibuat!";
+            header("Location: table.php");
             exit;
-        } else {
-            $error = "Failed to add news.";
+    
+        } catch (Exception $e) {
+            // Tangani error
+            $errorMessage = $e->getMessage();
         }
     }
 }
